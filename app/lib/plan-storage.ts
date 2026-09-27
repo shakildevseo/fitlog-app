@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const PLAN_KEY = "fitlog:plan";
 const SAVED_KEY = "fitlog:saved";
@@ -12,7 +12,13 @@ type PlanLists = {
   saved: number[];
 };
 
+const EMPTY_LISTS: PlanLists = { plan: [], saved: [] };
+let cachedLists: PlanLists | null = null;
+const listeners = new Set<() => void>();
+
 function readIds(key: string): number[] {
+  if (typeof window === "undefined") return [];
+
   try {
     const value: unknown = JSON.parse(window.localStorage.getItem(key) ?? "[]");
     return Array.isArray(value) ? value.filter((id): id is number => Number.isInteger(id)) : [];
@@ -28,6 +34,46 @@ export function getPlanLists(): PlanLists {
   };
 }
 
+function getSnapshot(): PlanLists {
+  if (typeof window === "undefined") return EMPTY_LISTS;
+  cachedLists ??= getPlanLists();
+  return cachedLists;
+}
+
+function publishLists() {
+  const nextLists = getPlanLists();
+  const currentLists = cachedLists;
+  if (
+    currentLists &&
+    currentLists.plan.length === nextLists.plan.length &&
+    currentLists.saved.length === nextLists.saved.length &&
+    currentLists.plan.every((id, index) => id === nextLists.plan[index]) &&
+    currentLists.saved.every((id, index) => id === nextLists.saved[index])
+  ) {
+    return;
+  }
+
+  cachedLists = nextLists;
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  if (listeners.size === 1) {
+    window.addEventListener(PLAN_EVENT, publishLists);
+    window.addEventListener("storage", publishLists);
+  }
+  publishLists();
+
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) {
+      window.removeEventListener(PLAN_EVENT, publishLists);
+      window.removeEventListener("storage", publishLists);
+    }
+  };
+}
+
 function updateList(key: string, workoutId: number, remove = false): boolean {
   const ids = readIds(key);
   const exists = ids.includes(workoutId);
@@ -36,9 +82,14 @@ function updateList(key: string, workoutId: number, remove = false): boolean {
   if (key === PLAN_KEY && !remove && ids.length >= MAX_PLAN_SIZE) return false;
 
   const nextIds = remove ? ids.filter((id) => id !== workoutId) : [...ids, workoutId];
-  window.localStorage.setItem(key, JSON.stringify(nextIds));
-  window.dispatchEvent(new Event(PLAN_EVENT));
-  return true;
+
+  try {
+    window.localStorage.setItem(key, JSON.stringify(nextIds));
+    window.dispatchEvent(new Event(PLAN_EVENT));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function addToPlan(workoutId: number): boolean {
@@ -49,20 +100,14 @@ export function addToSaved(workoutId: number): boolean {
   return updateList(SAVED_KEY, workoutId);
 }
 
+export function removeFromPlan(workoutId: number): boolean {
+  return updateList(PLAN_KEY, workoutId, true);
+}
+
+export function removeFromSaved(workoutId: number): boolean {
+  return updateList(SAVED_KEY, workoutId, true);
+}
+
 export function useWorkoutPlan(): PlanLists {
-  const [lists, setLists] = useState<PlanLists>({ plan: [], saved: [] });
-
-  useEffect(() => {
-    const syncLists = () => setLists(getPlanLists());
-    syncLists();
-    window.addEventListener(PLAN_EVENT, syncLists);
-    window.addEventListener("storage", syncLists);
-
-    return () => {
-      window.removeEventListener(PLAN_EVENT, syncLists);
-      window.removeEventListener("storage", syncLists);
-    };
-  }, []);
-
-  return lists;
+  return useSyncExternalStore(subscribe, getSnapshot, () => EMPTY_LISTS);
 }

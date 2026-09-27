@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useWorkoutPlan } from "../lib/plan-storage";
 
 export default function Navbar() {
+    const { plan, saved } = useWorkoutPlan();
+
     return (
         <header className="relative flex flex-nowrap items-center justify-between gap-2 border-b border-[#1d1f22] p-2 max-[480px]:gap-1 max-[480px]:p-1">
             <Link className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-base text-[#f1f2f2] max-[600px]:text-sm max-[480px]:gap-1 max-[480px]:text-xs" href="/">
@@ -35,11 +40,11 @@ export default function Navbar() {
             <div className="ml-auto flex shrink-0 items-center gap-3 whitespace-nowrap text-base font-bold max-[600px]:gap-1 max-[600px]:text-sm max-[480px]:gap-1 max-[480px]:text-[10px]">
                 <div className="flex items-center gap-2 rounded-full bg-[#ccff00] px-4 py-1 text-[#101200] max-[600px]:gap-1 max-[600px]:px-2 max-[480px]:px-1">
                     <span>Plan</span>
-                    <span>0</span>
+                    <span>{plan.length}</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-full border border-[#292b2f] px-4 py-1 text-[#bfc1c5] max-[600px]:gap-1 max-[600px]:px-2 max-[480px]:px-1">
                     <span>Saved</span>
-                    <span>0</span>
+                    <span>{saved.length}</span>
                 </div>
             </div>
         </header>
