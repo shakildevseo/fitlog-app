@@ -15,7 +15,7 @@ export default function Hero() {
                 <p className="mt-4 max-w-120 text-sm leading-6 text-[#999ca6]">
                     FitLog is a dark, no-nonsense gym companion: pick a lift, lock it
                     <br />
-                    into today's plan, and watch the week's work add up.
+                    into today&apos;s plan, and watch the week&apos;s work add up.
                 </p>
                 <a
                     className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-md bg-[#ccff00] px-4 text-[11px] font-bold tracking-wide text-[#11130a] transition-colors hover:bg-[#ddff55] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#ccff00]"

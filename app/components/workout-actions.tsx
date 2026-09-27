@@ -22,6 +22,7 @@ function BookmarkIcon() {
 export default function WorkoutActions({ workoutId }: { workoutId: number }) {
     const { plan, saved } = useWorkoutPlan();
     const isInPlan = plan.includes(workoutId);
+    const planIsFull = plan.length >= MAX_PLAN_SIZE;
     const isSaved = saved.includes(workoutId);
     const [message, setMessage] = useState("");
     const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,8 +42,6 @@ export default function WorkoutActions({ workoutId }: { workoutId: number }) {
 
         if (plan.includes(workoutId)) {
             showToast("Already in today's plan");
-        } else if (plan.length >= MAX_PLAN_SIZE) {
-            showToast(`Today's plan is full (${MAX_PLAN_SIZE} workouts max)`);
         } else {
             showToast(addToPlan(workoutId) ? "Added to today's plan" : "Unable to add workout");
         }
@@ -53,13 +52,13 @@ export default function WorkoutActions({ workoutId }: { workoutId: number }) {
             <div className="mt-7 flex flex-wrap gap-3">
                 <button
                     className="inline-flex items-center gap-2 rounded-full bg-[#ccff00] px-5 py-3 text-sm font-bold uppercase tracking-[0.08em] text-[#0c0f12] shadow-[0_12px_30px_rgba(204,255,0,0.25)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={isInPlan || plan.length >= MAX_PLAN_SIZE}
+                    disabled={isInPlan || planIsFull}
                     onClick={addWorkoutToPlan}
                     type="button"
-                    title={isInPlan ? "Already in today's plan" : plan.length >= MAX_PLAN_SIZE ? "Today's plan is full" : undefined}
+                    title={isInPlan ? "Already in today's plan" : planIsFull ? "Today's plan is full" : undefined}
                 >
                     <PlusIcon />
-                    {isInPlan ? "Added to today&apos;s plan" : "Add to today&apos;s plan"}
+                    {isInPlan ? "Added to today's plan" : "Add to today's plan"}
                 </button>
 
                 <button

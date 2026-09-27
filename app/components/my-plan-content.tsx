@@ -189,6 +189,9 @@ export default function MyPlanContent({ workouts }: { workouts: Workout[] }) {
                                         onClick={() => markAsDone(workout.id)}
                                         type="button"
                                     >
+                                        <svg aria-hidden="true" className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path d="m5 12 4.2 4.2L19 2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
                                         Mark as Done
                                     </button>
                                 )}
